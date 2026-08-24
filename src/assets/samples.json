@@ -1,0 +1,47 @@
+[
+  {
+    "id": "welcome",
+    "name": "Welcome",
+    "code": "graph TD\n    A[Welcome to Mermaid Editor] --> B{Choose Action}\n    B -->|New Diagram| C[Start Creating]\n    B -->|Use Template| D[Pick Template]\n    B -->|Import| E[Load Saved]\n    C --> F[Live Preview]\n    D --> F\n    E --> F"
+  },
+  {
+    "id": "flowchart",
+    "name": "Flowchart",
+    "code": "graph TD\n    A[Start] --> B{Decision}\n    B -->|Yes| C[Process 1]\n    B -->|No| D[Process 2]\n    C --> E[End]\n    D --> E"
+  },
+  {
+    "id": "sequence",
+    "name": "Sequence Diagram",
+    "code": "sequenceDiagram\n    participant Alice\n    participant Bob\n    Alice->>Bob: Hello Bob!\n    Bob->>Alice: Hello Alice!\n    Alice->>Bob: How are you?\n    Bob->>Alice: I'm good, thanks!"
+  },
+  {
+    "id": "class",
+    "name": "Class Diagram",
+    "code": "classDiagram\n    class Animal {\n        +String name\n        +int age\n        +makeSound()\n    }\n    class Dog {\n        +bark()\n    }\n    Animal <|-- Dog"
+  },
+  {
+    "id": "state",
+    "name": "State Diagram",
+    "code": "stateDiagram-v2\n    [*] --> Still\n    Still --> [*]\n    Still --> Moving\n    Moving --> Still\n    Moving --> Crash\n    Crash --> [*]"
+  },
+  {
+    "id": "er",
+    "name": "ER Diagram",
+    "code": "erDiagram\n    CUSTOMER ||--o{ ORDER : places\n    ORDER ||--|{ LINE-ITEM : contains\n    CUSTOMER {\n        string name\n        string email\n    }\n    ORDER {\n        int orderNumber\n        date orderDate\n    }"
+  },
+  {
+    "id": "gantt",
+    "name": "Gantt Chart",
+    "code": "gantt\n    title Project Timeline\n    dateFormat YYYY-MM-DD\n    section Planning\n    Requirements :a1, 2024-01-01, 30d\n    Design :after a1, 20d\n    section Development\n    Implementation :2024-02-20, 45d\n    Testing :2024-04-01, 30d"
+  },
+  {
+    "id": "pie",
+    "name": "Pie Chart",
+    "code": "pie title Project Budget\n    \"Development\" : 45\n    \"Design\" : 25\n    \"Testing\" : 15\n    \"Documentation\" : 15"
+  },
+  {
+    "id": "git",
+    "name": "Git Graph",
+    "code": "gitGraph\n    commit\n    commit\n    branch develop\n    checkout develop\n    commit\n    commit\n    checkout main\n    merge develop\n    commit"
+  }
+]
