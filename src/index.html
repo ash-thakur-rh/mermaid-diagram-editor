@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mermaid Diagram Editor</title>
+</head>
+<body>
+  <div id="preview"></div>
+  <script type="module">
+    import { initPreview, renderDiagram } from '/scripts/preview.js';
+    const container = document.getElementById('preview');
+    initPreview(container, 'light');
+    renderDiagram('graph TD\nA-->B');
+  </script>
+</body>
+</html>
