@@ -1,6 +1,37 @@
 import { toPng } from 'html-to-image';
 import { saveAs } from 'file-saver';
 
+function getSvgDimensions(svgElement) {
+  // Get actual SVG dimensions, preferring explicit attributes over computed style
+  let width = svgElement.getAttribute('width');
+  let height = svgElement.getAttribute('height');
+
+  // Parse numeric values from attribute strings like "800px" or "800"
+  if (width) width = parseFloat(width);
+  if (height) height = parseFloat(height);
+
+  // Fallback to viewBox if width/height not set
+  if (!width || !height) {
+    const viewBox = svgElement.getAttribute('viewBox');
+    if (viewBox) {
+      const parts = viewBox.split(/\s+/);
+      if (parts.length === 4) {
+        width = width || parseFloat(parts[2]);
+        height = height || parseFloat(parts[3]);
+      }
+    }
+  }
+
+  // Final fallback to bounding box
+  if (!width || !height) {
+    const bbox = svgElement.getBBox();
+    width = width || bbox.width;
+    height = height || bbox.height;
+  }
+
+  return { width, height };
+}
+
 export async function exportPNG(svgElement, filename, options = {}) {
   if (!svgElement) {
     alert('No diagram to export. Please create a diagram first.');
@@ -9,8 +40,9 @@ export async function exportPNG(svgElement, filename, options = {}) {
 
   try {
     const scale = options.scale || 2;
-    const width = options.width || svgElement.clientWidth;
-    const height = options.height || svgElement.clientHeight;
+    const dims = getSvgDimensions(svgElement);
+    const width = options.width || dims.width;
+    const height = options.height || dims.height;
 
     const dataUrl = await toPng(svgElement, {
       quality: 1.0,
@@ -79,8 +111,9 @@ export async function generatePreview(svgElement, options = {}) {
 
   try {
     const scale = options.scale || 2;
-    const width = options.width || svgElement.clientWidth;
-    const height = options.height || svgElement.clientHeight;
+    const dims = getSvgDimensions(svgElement);
+    const width = options.width || dims.width;
+    const height = options.height || dims.height;
 
     const toPngOptions = {
       quality: 1.0,

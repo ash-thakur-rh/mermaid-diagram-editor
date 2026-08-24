@@ -5,6 +5,33 @@ import { exportPNG, exportSVG, generateFilename, generatePreview } from './expor
 import { savePreferences, loadPreferences } from './storage.js';
 import { getTemplates } from './templates.js';
 
+function getSvgDimensions(svgElement) {
+  let width = svgElement.getAttribute('width');
+  let height = svgElement.getAttribute('height');
+
+  if (width) width = parseFloat(width);
+  if (height) height = parseFloat(height);
+
+  if (!width || !height) {
+    const viewBox = svgElement.getAttribute('viewBox');
+    if (viewBox) {
+      const parts = viewBox.split(/\s+/);
+      if (parts.length === 4) {
+        width = width || parseFloat(parts[2]);
+        height = height || parseFloat(parts[3]);
+      }
+    }
+  }
+
+  if (!width || !height) {
+    const bbox = svgElement.getBBox();
+    width = width || bbox.width;
+    height = height || bbox.height;
+  }
+
+  return { width, height };
+}
+
 let state = {
   theme: 'light',
   layoutMode: 'split'
@@ -170,8 +197,9 @@ function showExportDialog(format) {
   // Get current SVG dimensions
   const svg = getSvgElement();
   if (svg) {
-    widthInput.placeholder = `Auto (${svg.clientWidth}px)`;
-    heightInput.placeholder = `Auto (${svg.clientHeight}px)`;
+    const dims = getSvgDimensions(svg);
+    widthInput.placeholder = `Auto (${Math.round(dims.width)}px)`;
+    heightInput.placeholder = `Auto (${Math.round(dims.height)}px)`;
   }
 
   dialog.style.display = 'block';
@@ -243,15 +271,17 @@ async function updateExportPreview() {
     const previewDataUrl = await generatePreview(svg, options);
 
     if (previewDataUrl) {
-      const actualWidth = options.width || svg.clientWidth;
-      const actualHeight = options.height || svg.clientHeight;
+      const dims = getSvgDimensions(svg);
+      const actualWidth = options.width || dims.width;
+      const actualHeight = options.height || dims.height;
       const scaledWidth = Math.round(actualWidth * options.scale);
       const scaledHeight = Math.round(actualHeight * options.scale);
 
       previewContainer.innerHTML = `
         <img src="${previewDataUrl}" alt="Export Preview" class="export-preview-image" />
         <div class="export-preview-info">
-          Output size: ${scaledWidth} × ${scaledHeight}px
+          Original: ${Math.round(actualWidth)} × ${Math.round(actualHeight)}px<br>
+          Export (${options.scale}x): ${scaledWidth} × ${scaledHeight}px
         </div>
       `;
     } else {
