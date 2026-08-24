@@ -80,13 +80,22 @@ function setupEventListeners() {
 function toggleTheme() {
   state.theme = state.theme === 'light' ? 'dark' : 'light';
   applyTheme(state.theme);
+  updateThemeIcon();
   savePreferences({ theme: state.theme, layoutMode: state.layoutMode });
+}
+
+function updateThemeIcon() {
+  const themeBtn = document.getElementById('theme-toggle');
+  if (themeBtn) {
+    themeBtn.textContent = state.theme === 'light' ? '🌙' : '☀️';
+  }
 }
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   setEditorTheme(theme);
   setPreviewTheme(theme);
+  updateThemeIcon();
 
   const currentTab = getCurrentTab();
   if (currentTab) {
