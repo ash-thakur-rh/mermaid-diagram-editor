@@ -1,17 +1,23 @@
 import { toPng } from 'html-to-image';
 import { saveAs } from 'file-saver';
 
-export async function exportPNG(svgElement, filename) {
+export async function exportPNG(svgElement, filename, options = {}) {
   if (!svgElement) {
     alert('No diagram to export. Please create a diagram first.');
     return;
   }
 
   try {
+    const scale = options.scale || 2;
+    const width = options.width || svgElement.clientWidth;
+    const height = options.height || svgElement.clientHeight;
+
     const dataUrl = await toPng(svgElement, {
       quality: 1.0,
-      pixelRatio: 2,
-      backgroundColor: '#ffffff'
+      pixelRatio: scale,
+      backgroundColor: options.backgroundColor || '#ffffff',
+      width: width,
+      height: height
     });
 
     const blob = await (await fetch(dataUrl)).blob();
@@ -22,7 +28,7 @@ export async function exportPNG(svgElement, filename) {
   }
 }
 
-export async function exportSVG(svgElement, filename) {
+export async function exportSVG(svgElement, filename, options = {}) {
   if (!svgElement) {
     alert('No diagram to export. Please create a diagram first.');
     return;
@@ -30,6 +36,13 @@ export async function exportSVG(svgElement, filename) {
 
   try {
     const clonedSvg = svgElement.cloneNode(true);
+
+    if (options.width) {
+      clonedSvg.setAttribute('width', options.width);
+    }
+    if (options.height) {
+      clonedSvg.setAttribute('height', options.height);
+    }
 
     const styles = Array.from(document.styleSheets)
       .filter(sheet => {
@@ -56,6 +69,27 @@ export async function exportSVG(svgElement, filename) {
   } catch (error) {
     console.error('SVG export failed:', error);
     alert(`Failed to export SVG: ${error.message}`);
+  }
+}
+
+export async function generatePreview(svgElement, options = {}) {
+  if (!svgElement) {
+    return null;
+  }
+
+  try {
+    const scale = options.scale || 2;
+    const dataUrl = await toPng(svgElement, {
+      quality: 1.0,
+      pixelRatio: scale,
+      backgroundColor: options.backgroundColor || '#ffffff',
+      width: options.width,
+      height: options.height
+    });
+    return dataUrl;
+  } catch (error) {
+    console.error('Preview generation failed:', error);
+    return null;
   }
 }
 

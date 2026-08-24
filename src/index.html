@@ -46,6 +46,53 @@
     </main>
   </div>
 
+  <!-- Export Options Dialog -->
+  <div id="export-dialog" class="export-dialog" style="display: none;">
+    <div class="export-dialog-overlay"></div>
+    <div class="export-dialog-content">
+      <h2>Export Options</h2>
+
+      <div class="export-option-group">
+        <label>Format:</label>
+        <div class="export-format-selection">
+          <span id="export-format-display">PNG</span>
+        </div>
+      </div>
+
+      <div class="export-option-group">
+        <label for="export-scale">Scale:</label>
+        <select id="export-scale" class="export-select">
+          <option value="1">1x (Original)</option>
+          <option value="2" selected>2x (Recommended)</option>
+          <option value="3">3x (High Quality)</option>
+          <option value="4">4x (Very High)</option>
+        </select>
+      </div>
+
+      <div class="export-option-group">
+        <label for="export-width">Width (px):</label>
+        <input type="number" id="export-width" class="export-input" placeholder="Auto">
+      </div>
+
+      <div class="export-option-group">
+        <label for="export-height">Height (px):</label>
+        <input type="number" id="export-height" class="export-input" placeholder="Auto">
+      </div>
+
+      <div class="export-preview-section">
+        <h3>Preview</h3>
+        <div id="export-preview-container" class="export-preview-container">
+          <div class="export-preview-loading">Generating preview...</div>
+        </div>
+      </div>
+
+      <div class="export-dialog-actions">
+        <button id="export-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="export-confirm" class="btn btn-success">Download</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { init } from '/scripts/app.js';
     init();

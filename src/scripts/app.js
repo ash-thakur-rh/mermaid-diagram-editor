@@ -1,7 +1,7 @@
 import { initEditor, loadCode, onChange as onEditorChange, setTheme as setEditorTheme } from './editor.js';
 import { initPreview, renderDiagram, setTheme as setPreviewTheme, getSvgElement } from './preview.js';
 import { initTabs, renderTabBar, getCurrentTab, updateCurrentTab, createTab, switchTab } from './tabs.js';
-import { exportPNG, exportSVG, generateFilename } from './export.js';
+import { exportPNG, exportSVG, generateFilename, generatePreview } from './export.js';
 import { savePreferences, loadPreferences } from './storage.js';
 import { getTemplates } from './templates.js';
 
@@ -61,17 +61,11 @@ function setupEventListeners() {
   document.getElementById('layout-toggle-preview')?.addEventListener('click', () => toggleLayout('preview'));
 
   document.getElementById('export-png')?.addEventListener('click', () => {
-    const svg = getSvgElement();
-    const tab = getCurrentTab();
-    const filename = generateFilename(tab.name, 'png');
-    exportPNG(svg, filename);
+    showExportDialog('png');
   });
 
   document.getElementById('export-svg')?.addEventListener('click', () => {
-    const svg = getSvgElement();
-    const tab = getCurrentTab();
-    const filename = generateFilename(tab.name, 'svg');
-    exportSVG(svg, filename);
+    showExportDialog('svg');
   });
 
   document.getElementById('new-from-template')?.addEventListener('click', showTemplateDialog);
@@ -157,4 +151,121 @@ function showTemplateDialog() {
   dialog.querySelector('.template-dialog-overlay').addEventListener('click', () => {
     dialog.remove();
   });
+}
+
+let currentExportFormat = 'png';
+
+function showExportDialog(format) {
+  currentExportFormat = format;
+  const dialog = document.getElementById('export-dialog');
+  const formatDisplay = document.getElementById('export-format-display');
+  const scaleSelect = document.getElementById('export-scale');
+  const widthInput = document.getElementById('export-width');
+  const heightInput = document.getElementById('export-height');
+  const previewContainer = document.getElementById('export-preview-container');
+
+  formatDisplay.textContent = format.toUpperCase();
+
+  // Get current SVG dimensions
+  const svg = getSvgElement();
+  if (svg) {
+    widthInput.placeholder = `Auto (${svg.clientWidth}px)`;
+    heightInput.placeholder = `Auto (${svg.clientHeight}px)`;
+  }
+
+  dialog.style.display = 'block';
+
+  // Generate initial preview
+  updateExportPreview();
+
+  // Update preview on option change
+  scaleSelect.addEventListener('change', updateExportPreview);
+  widthInput.addEventListener('input', updateExportPreview);
+  heightInput.addEventListener('input', updateExportPreview);
+
+  // Handle confirm
+  const confirmBtn = document.getElementById('export-confirm');
+  const newConfirmBtn = confirmBtn.cloneNode(true);
+  confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+  newConfirmBtn.addEventListener('click', () => {
+    performExport();
+    dialog.style.display = 'none';
+  });
+
+  // Handle cancel
+  const cancelBtn = document.getElementById('export-cancel');
+  const newCancelBtn = cancelBtn.cloneNode(true);
+  cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+  newCancelBtn.addEventListener('click', () => {
+    dialog.style.display = 'none';
+  });
+
+  // Handle overlay click
+  const overlay = dialog.querySelector('.export-dialog-overlay');
+  const newOverlay = overlay.cloneNode(true);
+  overlay.parentNode.replaceChild(newOverlay, overlay);
+
+  newOverlay.addEventListener('click', () => {
+    dialog.style.display = 'none';
+  });
+}
+
+async function updateExportPreview() {
+  const svg = getSvgElement();
+  if (!svg) return;
+
+  const previewContainer = document.getElementById('export-preview-container');
+  const scaleSelect = document.getElementById('export-scale');
+  const widthInput = document.getElementById('export-width');
+  const heightInput = document.getElementById('export-height');
+
+  const options = {
+    scale: parseFloat(scaleSelect.value),
+    width: widthInput.value ? parseInt(widthInput.value) : undefined,
+    height: heightInput.value ? parseInt(heightInput.value) : undefined
+  };
+
+  previewContainer.innerHTML = '<div class="export-preview-loading">Generating preview...</div>';
+
+  const previewDataUrl = await generatePreview(svg, options);
+
+  if (previewDataUrl) {
+    const actualWidth = options.width || svg.clientWidth;
+    const actualHeight = options.height || svg.clientHeight;
+    const scaledWidth = actualWidth * options.scale;
+    const scaledHeight = actualHeight * options.scale;
+
+    previewContainer.innerHTML = `
+      <img src="${previewDataUrl}" alt="Export Preview" class="export-preview-image" />
+      <div class="export-preview-info">
+        Output size: ${scaledWidth} × ${scaledHeight}px
+      </div>
+    `;
+  } else {
+    previewContainer.innerHTML = '<div class="export-preview-error">Preview failed</div>';
+  }
+}
+
+function performExport() {
+  const svg = getSvgElement();
+  const tab = getCurrentTab();
+  const filename = generateFilename(tab.name, currentExportFormat);
+
+  const scaleSelect = document.getElementById('export-scale');
+  const widthInput = document.getElementById('export-width');
+  const heightInput = document.getElementById('export-height');
+
+  const options = {
+    scale: parseFloat(scaleSelect.value),
+    width: widthInput.value ? parseInt(widthInput.value) : undefined,
+    height: heightInput.value ? parseInt(heightInput.value) : undefined
+  };
+
+  if (currentExportFormat === 'png') {
+    exportPNG(svg, filename, options);
+  } else {
+    exportSVG(svg, filename, options);
+  }
 }
