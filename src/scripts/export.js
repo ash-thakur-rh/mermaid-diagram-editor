@@ -5,13 +5,23 @@ function getSvgDimensions(svgElement) {
   let width = null;
   let height = null;
 
+  console.log('[getSvgDimensions] Starting detection...');
+  console.log('[getSvgDimensions] Attributes:', {
+    width: svgElement.getAttribute('width'),
+    height: svgElement.getAttribute('height'),
+    viewBox: svgElement.getAttribute('viewBox'),
+    style: svgElement.getAttribute('style')
+  });
+
   // Priority 1: viewBox (gives true diagram dimensions regardless of CSS)
   const viewBox = svgElement.getAttribute('viewBox');
   if (viewBox) {
     const parts = viewBox.split(/\s+/);
+    console.log('[getSvgDimensions] viewBox parts:', parts);
     if (parts.length === 4) {
       width = parseFloat(parts[2]);
       height = parseFloat(parts[3]);
+      console.log('[getSvgDimensions] Using viewBox dimensions:', { width, height });
     }
   }
 
@@ -22,6 +32,10 @@ function getSvgDimensions(svgElement) {
 
     if (attrWidth) width = parseFloat(attrWidth);
     if (attrHeight) height = parseFloat(attrHeight);
+
+    if (width || height) {
+      console.log('[getSvgDimensions] Using attributes:', { width, height });
+    }
   }
 
   // Priority 3: Temporarily remove CSS constraints and measure natural size
@@ -39,6 +53,8 @@ function getSvgDimensions(svgElement) {
     // Restore original styles
     svgElement.style.maxWidth = originalMaxWidth;
     svgElement.style.width = originalWidth;
+
+    console.log('[getSvgDimensions] Using computed rect:', { width, height });
   }
 
   // Final fallback: getBBox
@@ -47,10 +63,13 @@ function getSvgDimensions(svgElement) {
       const bbox = svgElement.getBBox();
       width = width || bbox.width;
       height = height || bbox.height;
+      console.log('[getSvgDimensions] Using getBBox:', { width, height });
     } catch (e) {
       console.warn('[getSvgDimensions] getBBox failed:', e);
     }
   }
+
+  console.log('[getSvgDimensions] FINAL RESULT:', { width, height });
 
   return { width, height };
 }
@@ -64,15 +83,18 @@ export async function exportPNG(svgElement, filename, options = {}) {
   try {
     const scale = options.scale || 2;
     const dims = getSvgDimensions(svgElement);
-    const width = options.width || dims.width;
-    const height = options.height || dims.height;
+    const padding = { top: 20, right: 20, bottom: 20, left: 0 };
+    const width = (options.width || dims.width) + padding.left + padding.right;
+    const height = (options.height || dims.height) + padding.top + padding.bottom;
 
     // Ensure SVG has explicit width/height attributes for html-to-image
     const originalWidth = svgElement.getAttribute('width');
     const originalHeight = svgElement.getAttribute('height');
+    const originalStyle = svgElement.getAttribute('style') || '';
 
     svgElement.setAttribute('width', width);
     svgElement.setAttribute('height', height);
+    svgElement.setAttribute('style', `${originalStyle}; padding: ${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px;`);
 
     const toPngOptions = {
       quality: 1.0,
@@ -94,6 +116,11 @@ export async function exportPNG(svgElement, filename, options = {}) {
       svgElement.setAttribute('height', originalHeight);
     } else {
       svgElement.removeAttribute('height');
+    }
+    if (originalStyle) {
+      svgElement.setAttribute('style', originalStyle);
+    } else {
+      svgElement.removeAttribute('style');
     }
 
     const blob = await (await fetch(dataUrl)).blob();
@@ -156,15 +183,18 @@ export async function generatePreview(svgElement, options = {}) {
   try {
     const scale = options.scale || 2;
     const dims = getSvgDimensions(svgElement);
-    const width = options.width || dims.width;
-    const height = options.height || dims.height;
+    const padding = { top: 20, right: 20, bottom: 20, left: 0 };
+    const width = (options.width || dims.width) + padding.left + padding.right;
+    const height = (options.height || dims.height) + padding.top + padding.bottom;
 
     // Ensure SVG has explicit width/height attributes for html-to-image
     const originalWidth = svgElement.getAttribute('width');
     const originalHeight = svgElement.getAttribute('height');
+    const originalStyle = svgElement.getAttribute('style') || '';
 
     svgElement.setAttribute('width', width);
     svgElement.setAttribute('height', height);
+    svgElement.setAttribute('style', `${originalStyle}; padding: ${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px;`);
 
     const toPngOptions = {
       quality: 1.0,
@@ -186,6 +216,11 @@ export async function generatePreview(svgElement, options = {}) {
       svgElement.setAttribute('height', originalHeight);
     } else {
       svgElement.removeAttribute('height');
+    }
+    if (originalStyle) {
+      svgElement.setAttribute('style', originalStyle);
+    } else {
+      svgElement.removeAttribute('style');
     }
 
     return dataUrl;
