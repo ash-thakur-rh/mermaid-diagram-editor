@@ -44,15 +44,44 @@ export async function exportPNG(svgElement, filename, options = {}) {
     const width = options.width || dims.width;
     const height = options.height || dims.height;
 
-    const dataUrl = await toPng(svgElement, {
+    console.log('[exportPNG] SVG element:', svgElement);
+    console.log('[exportPNG] Dimensions:', { width, height, scale, dims });
+    console.log('[exportPNG] Options:', options);
+
+    // Ensure SVG has explicit width/height attributes for html-to-image
+    const originalWidth = svgElement.getAttribute('width');
+    const originalHeight = svgElement.getAttribute('height');
+
+    svgElement.setAttribute('width', width);
+    svgElement.setAttribute('height', height);
+
+    const toPngOptions = {
       quality: 1.0,
       pixelRatio: scale,
       backgroundColor: options.backgroundColor || '#ffffff',
       width: width,
       height: height
-    });
+    };
+
+    console.log('[exportPNG] toPng options:', toPngOptions);
+
+    const dataUrl = await toPng(svgElement, toPngOptions);
+    console.log('[exportPNG] Data URL length:', dataUrl?.length);
+
+    // Restore original attributes
+    if (originalWidth !== null) {
+      svgElement.setAttribute('width', originalWidth);
+    } else {
+      svgElement.removeAttribute('width');
+    }
+    if (originalHeight !== null) {
+      svgElement.setAttribute('height', originalHeight);
+    } else {
+      svgElement.removeAttribute('height');
+    }
 
     const blob = await (await fetch(dataUrl)).blob();
+    console.log('[exportPNG] Blob size:', blob.size, 'type:', blob.type);
     saveAs(blob, filename);
   } catch (error) {
     console.error('PNG export failed:', error);
@@ -115,21 +144,42 @@ export async function generatePreview(svgElement, options = {}) {
     const width = options.width || dims.width;
     const height = options.height || dims.height;
 
+    console.log('[generatePreview] SVG element:', svgElement);
+    console.log('[generatePreview] Dimensions:', { width, height, scale, dims });
+    console.log('[generatePreview] Options:', options);
+
+    // Ensure SVG has explicit width/height attributes for html-to-image
+    const originalWidth = svgElement.getAttribute('width');
+    const originalHeight = svgElement.getAttribute('height');
+
+    svgElement.setAttribute('width', width);
+    svgElement.setAttribute('height', height);
+
     const toPngOptions = {
       quality: 1.0,
       pixelRatio: scale,
-      backgroundColor: options.backgroundColor || '#ffffff'
+      backgroundColor: options.backgroundColor || '#ffffff',
+      width: width,
+      height: height
     };
 
-    // Only add width/height if specified to avoid html-to-image issues
-    if (options.width) {
-      toPngOptions.width = width;
-    }
-    if (options.height) {
-      toPngOptions.height = height;
-    }
+    console.log('[generatePreview] toPng options:', toPngOptions);
 
     const dataUrl = await toPng(svgElement, toPngOptions);
+    console.log('[generatePreview] Data URL length:', dataUrl?.length);
+
+    // Restore original attributes
+    if (originalWidth !== null) {
+      svgElement.setAttribute('width', originalWidth);
+    } else {
+      svgElement.removeAttribute('width');
+    }
+    if (originalHeight !== null) {
+      svgElement.setAttribute('height', originalHeight);
+    } else {
+      svgElement.removeAttribute('height');
+    }
+
     return dataUrl;
   } catch (error) {
     console.error('Preview generation failed:', error);
