@@ -2,32 +2,74 @@ import { toPng } from 'html-to-image';
 import { saveAs } from 'file-saver';
 
 function getSvgDimensions(svgElement) {
-  // Get actual SVG dimensions, preferring explicit attributes over computed style
-  let width = svgElement.getAttribute('width');
-  let height = svgElement.getAttribute('height');
+  let width = null;
+  let height = null;
 
-  // Parse numeric values from attribute strings like "800px" or "800"
-  if (width) width = parseFloat(width);
-  if (height) height = parseFloat(height);
+  console.log('[getSvgDimensions] Raw attributes:', {
+    width: svgElement.getAttribute('width'),
+    height: svgElement.getAttribute('height'),
+    viewBox: svgElement.getAttribute('viewBox'),
+    styleWidth: svgElement.style.width,
+    styleMaxWidth: svgElement.style.maxWidth,
+    clientWidth: svgElement.clientWidth
+  });
 
-  // Fallback to viewBox if width/height not set
-  if (!width || !height) {
-    const viewBox = svgElement.getAttribute('viewBox');
-    if (viewBox) {
-      const parts = viewBox.split(/\s+/);
-      if (parts.length === 4) {
-        width = width || parseFloat(parts[2]);
-        height = height || parseFloat(parts[3]);
-      }
+  // Priority 1: viewBox (gives true diagram dimensions regardless of CSS)
+  const viewBox = svgElement.getAttribute('viewBox');
+  if (viewBox) {
+    const parts = viewBox.split(/\s+/);
+    if (parts.length === 4) {
+      width = parseFloat(parts[2]);
+      height = parseFloat(parts[3]);
+      console.log('[getSvgDimensions] Using viewBox:', { width, height });
     }
   }
 
-  // Final fallback to bounding box
+  // Priority 2: Explicit width/height attributes
   if (!width || !height) {
-    const bbox = svgElement.getBBox();
-    width = width || bbox.width;
-    height = height || bbox.height;
+    const attrWidth = svgElement.getAttribute('width');
+    const attrHeight = svgElement.getAttribute('height');
+
+    if (attrWidth) width = parseFloat(attrWidth);
+    if (attrHeight) height = parseFloat(attrHeight);
+
+    if (width || height) {
+      console.log('[getSvgDimensions] Using attributes:', { width, height });
+    }
   }
+
+  // Priority 3: Temporarily remove CSS constraints and measure natural size
+  if (!width || !height) {
+    const originalMaxWidth = svgElement.style.maxWidth;
+    const originalWidth = svgElement.style.width;
+
+    svgElement.style.maxWidth = 'none';
+    svgElement.style.width = 'auto';
+
+    const rect = svgElement.getBoundingClientRect();
+    width = width || rect.width;
+    height = height || rect.height;
+
+    // Restore original styles
+    svgElement.style.maxWidth = originalMaxWidth;
+    svgElement.style.width = originalWidth;
+
+    console.log('[getSvgDimensions] Using natural size:', { width, height });
+  }
+
+  // Final fallback: getBBox
+  if (!width || !height) {
+    try {
+      const bbox = svgElement.getBBox();
+      width = width || bbox.width;
+      height = height || bbox.height;
+      console.log('[getSvgDimensions] Using getBBox:', { width, height });
+    } catch (e) {
+      console.warn('[getSvgDimensions] getBBox failed:', e);
+    }
+  }
+
+  console.log('[getSvgDimensions] Final dimensions:', { width, height });
 
   return { width, height };
 }

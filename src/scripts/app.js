@@ -6,27 +6,54 @@ import { savePreferences, loadPreferences } from './storage.js';
 import { getTemplates } from './templates.js';
 
 function getSvgDimensions(svgElement) {
-  let width = svgElement.getAttribute('width');
-  let height = svgElement.getAttribute('height');
+  let width = null;
+  let height = null;
 
-  if (width) width = parseFloat(width);
-  if (height) height = parseFloat(height);
-
-  if (!width || !height) {
-    const viewBox = svgElement.getAttribute('viewBox');
-    if (viewBox) {
-      const parts = viewBox.split(/\s+/);
-      if (parts.length === 4) {
-        width = width || parseFloat(parts[2]);
-        height = height || parseFloat(parts[3]);
-      }
+  // Priority 1: viewBox (gives true diagram dimensions regardless of CSS)
+  const viewBox = svgElement.getAttribute('viewBox');
+  if (viewBox) {
+    const parts = viewBox.split(/\s+/);
+    if (parts.length === 4) {
+      width = parseFloat(parts[2]);
+      height = parseFloat(parts[3]);
     }
   }
 
+  // Priority 2: Explicit width/height attributes
   if (!width || !height) {
-    const bbox = svgElement.getBBox();
-    width = width || bbox.width;
-    height = height || bbox.height;
+    const attrWidth = svgElement.getAttribute('width');
+    const attrHeight = svgElement.getAttribute('height');
+
+    if (attrWidth) width = parseFloat(attrWidth);
+    if (attrHeight) height = parseFloat(attrHeight);
+  }
+
+  // Priority 3: Temporarily remove CSS constraints and measure natural size
+  if (!width || !height) {
+    const originalMaxWidth = svgElement.style.maxWidth;
+    const originalWidth = svgElement.style.width;
+
+    svgElement.style.maxWidth = 'none';
+    svgElement.style.width = 'auto';
+
+    const rect = svgElement.getBoundingClientRect();
+    width = width || rect.width;
+    height = height || rect.height;
+
+    // Restore original styles
+    svgElement.style.maxWidth = originalMaxWidth;
+    svgElement.style.width = originalWidth;
+  }
+
+  // Final fallback: getBBox
+  if (!width || !height) {
+    try {
+      const bbox = svgElement.getBBox();
+      width = width || bbox.width;
+      height = height || bbox.height;
+    } catch (e) {
+      console.warn('[getSvgDimensions] getBBox failed:', e);
+    }
   }
 
   return { width, height };
