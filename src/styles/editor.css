@@ -1,0 +1,11 @@
+.editor-container {
+  position: relative;
+}
+
+.editor-container .monaco-editor {
+  height: 100%;
+}
+
+.editor-container .monaco-editor .overflow-guard {
+  border-radius: 0;
+}
