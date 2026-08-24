@@ -18,7 +18,7 @@ A browser-based mermaid diagram editor with live preview, multi-tab support, loc
 
 ## Quick Start
 
-Visit the live app: **[Your GitHub Pages URL]**
+Visit the live app: https://mermaid.ashthakur.in
 
 Or run locally:
 
