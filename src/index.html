@@ -4,14 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mermaid Diagram Editor</title>
+  <style>
+    #editor { width: 50%; height: 500px; border: 1px solid #ccc; float: left; }
+    #preview { width: 50%; height: 500px; border: 1px solid #ccc; float: left; }
+  </style>
 </head>
 <body>
+  <div id="editor"></div>
   <div id="preview"></div>
   <script type="module">
+    import { initEditor, onChange } from '/scripts/editor.js';
     import { initPreview, renderDiagram } from '/scripts/preview.js';
-    const container = document.getElementById('preview');
-    initPreview(container, 'light');
-    renderDiagram('graph TD\nA-->B');
+
+    const editorContainer = document.getElementById('editor');
+    const previewContainer = document.getElementById('preview');
+
+    initEditor(editorContainer, 'graph TD\n    A[Start] --> B[End]');
+    initPreview(previewContainer, 'light');
+    renderDiagram('graph TD\n    A[Start] --> B[End]');
+
+    onChange((code) => {
+      renderDiagram(code);
+    });
   </script>
 </body>
 </html>
