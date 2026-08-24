@@ -2,7 +2,6 @@
 
 A browser-based mermaid diagram editor with live preview, multi-tab support, localStorage persistence, and PNG/SVG export capabilities.
 
-![Screenshot](https://via.placeholder.com/800x400?text=Screenshot+Coming+Soon)
 
 ## Features
 
@@ -23,7 +22,7 @@ Visit the live app: https://mermaid.ashthakur.in
 Or run locally:
 
 ```bash
-git clone https://github.com/yourusername/mermaid-diagram-editor.git
+git clone https://github.com/ash-thakur-rh/mermaid-diagram-editor.git
 cd mermaid-diagram-editor
 npm install
 npm run dev
