@@ -5,25 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mermaid Diagram Editor</title>
   <style>
-    #editor { width: 50%; height: 500px; border: 1px solid #ccc; float: left; }
-    #preview { width: 50%; height: 500px; border: 1px solid #ccc; float: left; }
+    body { margin: 0; font-family: Arial, sans-serif; }
+    #tab-bar { height: 40px; background: #f0f0f0; display: flex; align-items: center; padding: 0 10px; }
+    .tab-list { display: flex; gap: 5px; flex: 1; }
+    .tab { padding: 8px 12px; background: white; border: 1px solid #ccc; border-radius: 4px 4px 0 0; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .tab.active { background: #007acc; color: white; border-color: #007acc; }
+    .tab-close { background: none; border: none; font-size: 18px; cursor: pointer; padding: 0 4px; }
+    .tab-new { background: #007acc; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+    #editor { width: 50%; height: calc(100vh - 40px); float: left; }
+    #preview { width: 50%; height: calc(100vh - 40px); float: left; padding: 20px; box-sizing: border-box; overflow: auto; }
   </style>
 </head>
 <body>
+  <div id="tab-bar"></div>
   <div id="editor"></div>
   <div id="preview"></div>
   <script type="module">
-    import { initEditor, onChange } from '/scripts/editor.js';
+    import { initEditor, loadCode, onChange } from '/scripts/editor.js';
     import { initPreview, renderDiagram } from '/scripts/preview.js';
+    import { initTabs, renderTabBar, getCurrentTab, updateCurrentTab } from '/scripts/tabs.js';
 
     const editorContainer = document.getElementById('editor');
     const previewContainer = document.getElementById('preview');
+    const tabBarContainer = document.getElementById('tab-bar');
 
-    initEditor(editorContainer, 'graph TD\n    A[Start] --> B[End]');
     initPreview(previewContainer, 'light');
-    renderDiagram('graph TD\n    A[Start] --> B[End]');
+
+    initTabs((tab) => {
+      loadCode(tab.code);
+      renderDiagram(tab.code);
+    });
+
+    const currentTab = getCurrentTab();
+    initEditor(editorContainer, currentTab.code);
+    renderDiagram(currentTab.code);
+    renderTabBar(tabBarContainer);
 
     onChange((code) => {
+      updateCurrentTab({ code });
       renderDiagram(code);
     });
   </script>
