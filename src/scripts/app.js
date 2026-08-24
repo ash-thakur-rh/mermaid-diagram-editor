@@ -154,6 +154,7 @@ function showTemplateDialog() {
 }
 
 let currentExportFormat = 'png';
+let previewDebounceTimer = null;
 
 function showExportDialog(format) {
   currentExportFormat = format;
@@ -178,10 +179,15 @@ function showExportDialog(format) {
   // Generate initial preview
   updateExportPreview();
 
-  // Update preview on option change
+  // Update preview on option change with debouncing for inputs
+  const debouncedPreviewUpdate = () => {
+    clearTimeout(previewDebounceTimer);
+    previewDebounceTimer = setTimeout(updateExportPreview, 300);
+  };
+
   scaleSelect.addEventListener('change', updateExportPreview);
-  widthInput.addEventListener('input', updateExportPreview);
-  heightInput.addEventListener('input', updateExportPreview);
+  widthInput.addEventListener('input', debouncedPreviewUpdate);
+  heightInput.addEventListener('input', debouncedPreviewUpdate);
 
   // Handle confirm
   const confirmBtn = document.getElementById('export-confirm');
@@ -214,7 +220,11 @@ function showExportDialog(format) {
 
 async function updateExportPreview() {
   const svg = getSvgElement();
-  if (!svg) return;
+  if (!svg) {
+    const previewContainer = document.getElementById('export-preview-container');
+    previewContainer.innerHTML = '<div class="export-preview-error">No diagram to preview</div>';
+    return;
+  }
 
   const previewContainer = document.getElementById('export-preview-container');
   const scaleSelect = document.getElementById('export-scale');
@@ -229,22 +239,27 @@ async function updateExportPreview() {
 
   previewContainer.innerHTML = '<div class="export-preview-loading">Generating preview...</div>';
 
-  const previewDataUrl = await generatePreview(svg, options);
+  try {
+    const previewDataUrl = await generatePreview(svg, options);
 
-  if (previewDataUrl) {
-    const actualWidth = options.width || svg.clientWidth;
-    const actualHeight = options.height || svg.clientHeight;
-    const scaledWidth = actualWidth * options.scale;
-    const scaledHeight = actualHeight * options.scale;
+    if (previewDataUrl) {
+      const actualWidth = options.width || svg.clientWidth;
+      const actualHeight = options.height || svg.clientHeight;
+      const scaledWidth = Math.round(actualWidth * options.scale);
+      const scaledHeight = Math.round(actualHeight * options.scale);
 
-    previewContainer.innerHTML = `
-      <img src="${previewDataUrl}" alt="Export Preview" class="export-preview-image" />
-      <div class="export-preview-info">
-        Output size: ${scaledWidth} × ${scaledHeight}px
-      </div>
-    `;
-  } else {
-    previewContainer.innerHTML = '<div class="export-preview-error">Preview failed</div>';
+      previewContainer.innerHTML = `
+        <img src="${previewDataUrl}" alt="Export Preview" class="export-preview-image" />
+        <div class="export-preview-info">
+          Output size: ${scaledWidth} × ${scaledHeight}px
+        </div>
+      `;
+    } else {
+      previewContainer.innerHTML = '<div class="export-preview-error">Preview generation failed. The diagram may be too complex or large.</div>';
+    }
+  } catch (error) {
+    console.error('Preview update error:', error);
+    previewContainer.innerHTML = `<div class="export-preview-error">Error: ${error.message}</div>`;
   }
 }
 

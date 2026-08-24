@@ -79,13 +79,24 @@ export async function generatePreview(svgElement, options = {}) {
 
   try {
     const scale = options.scale || 2;
-    const dataUrl = await toPng(svgElement, {
+    const width = options.width || svgElement.clientWidth;
+    const height = options.height || svgElement.clientHeight;
+
+    const toPngOptions = {
       quality: 1.0,
       pixelRatio: scale,
-      backgroundColor: options.backgroundColor || '#ffffff',
-      width: options.width,
-      height: options.height
-    });
+      backgroundColor: options.backgroundColor || '#ffffff'
+    };
+
+    // Only add width/height if specified to avoid html-to-image issues
+    if (options.width) {
+      toPngOptions.width = width;
+    }
+    if (options.height) {
+      toPngOptions.height = height;
+    }
+
+    const dataUrl = await toPng(svgElement, toPngOptions);
     return dataUrl;
   } catch (error) {
     console.error('Preview generation failed:', error);
