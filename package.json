@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "mermaid": "11.17.1",
-    "monaco-editor": "0.56.0",
+    "monaco-editor": "0.57.0",
     "html-to-image": "1.11.13",
     "file-saver": "2.0.5"
   },
